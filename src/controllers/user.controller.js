@@ -67,13 +67,14 @@ const loginUser = asyncHandler( async (req, res) => {
     const { Email , Password } = req.body;
 
     if (!Email || !Password ) {
-        throw new apiError(400,"email and Password is required");
+        throw new apiError(401,"email and Password is required");
+
     }
 
     const user = await User.findOne({Email});
 
-    if (user) {
-         throw new apiError(400, "user not found");
+    if (!user) {
+         throw new apiError(402, "user not found");
     }
 
     const ispasswordValid = await user.isPasswordCorrect(Password)
@@ -127,7 +128,7 @@ const logoutUser = asyncHandler(async(req , res) =>{
     .status(200)
     .clearCookie("AccessToken", options)
     .clearCookie("RefreshToken", options)
-    .json(new apiResponce(200,{},"User logged out"))
+    .json(new apiResponce(200,{},"User xyz"))
 
 })
     
