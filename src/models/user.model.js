@@ -34,7 +34,7 @@ const userSchema = new Schema(
         },
 
         Refreshtoken: {
-            type: string
+            type: String
         }
         
     }
@@ -54,7 +54,7 @@ userSchema.methods.generateAccessToken = function () {
     return jwt.sign(
         {
             _id: this._id,
-            Email: thia.Email,
+            Email: this.Email,
             Username: this.Username
         },
         process.env.ACCESS_TOKEN_SECRET,

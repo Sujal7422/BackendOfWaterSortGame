@@ -2,6 +2,8 @@ import { asyncHandler } from "../utils/asynchandler.js";
 import { apiError } from "../utils/apiError.js";
 import { User } from "../models/user.model.js";
 import { apiResponce } from "../utils/apiResponse.js";
+import { Level } from "../models/level.model.js";
+
 
 const registerUser = asyncHandler(async (req,res) =>{
     const {Username ,Email, Password} = req.body;
@@ -13,19 +15,21 @@ const registerUser = asyncHandler(async (req,res) =>{
         throw new apiError(400, "all fields are required")
     }
 
-    const existedUser = User.findOne({
+    const existedUser = await User.findOne({
         $or: [{Username}, {Email}]
-    })
+    });
 
     if (existedUser) {
         throw new apiError(409, "outher have same candestiol")
     }
 
+    const newLevel = await Level.create({}); // <-- new copy for the user
     const user = await User.create(
         {
             Username,
             Email,
-            Password
+            Password,
+            levelhistory: [newLevel._id]
         }
     )
 

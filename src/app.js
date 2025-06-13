@@ -18,6 +18,11 @@ app.use(cookieParser())
 
 import userRouter from "./routes/user.routes.js";
 
-app.use("/aoi/v1/users", userRouter)
+app.use("/api/v1/users", userRouter)
+
+app.get("/", (req, res) => {
+  res.send("API is working");
+});
+
 
 export { app }
