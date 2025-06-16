@@ -4,6 +4,7 @@ import { User } from "../models/user.model.js";
 import { apiResponce } from "../utils/apiResponse.js";
 import { Level } from "../models/level.model.js";
 import jwt from "jsonwebtoken";
+import { useInsertionEffect } from "react";
 
 const generateAccessAndRefreshTokens = async (userId) => {
     try {
@@ -129,7 +130,7 @@ const logoutUser = asyncHandler(async (req, res) => {
 const refreshAccessToken = asyncHandler(async (req,res) => {
     const incomingRefrashToken = req.cookie.refreshToken || req.body.refreshToken
 
-    if (incomingRefrashToken) {
+    if (!incomingRefrashToken) {
         throw new apiError(444,"unauthorized request")
     }
 
@@ -170,6 +171,53 @@ const refreshAccessToken = asyncHandler(async (req,res) => {
     } catch (error) {
         throw new apiError(401,"invalid refresh token")
     }
-})
+});
+const changeUserPassword =asyncHandler(async (req,res) => {
+        const {oldPassword, newPassword} =req.body
+        const user = await User.findById(req.body?._id)
+        const isPasswordCorrect = User.isPasswordCorrect(oldPassword)
 
-export { registerUser, loginUser, logoutUser , refreshAccessToken };
+        if (!isPasswordCorrect) {
+            throw new apiError(400,"invalid old password")
+        }
+
+        User.Password=newPassword
+        await User.save({validateBeforeSave: false})
+
+        return res
+        .status(200)
+        .json(new apiResponce(200, {}, "password changed cuccessfully"))
+
+});
+
+const getCurenuser = asyncHandler(async (req,res) => {
+    return res
+    .status(200)
+    .json(200,req.user,"surent user fetched successfully")
+});
+
+const updateAccountDetails =asyncHandler( async (req,res) => {
+    const {Username ,Email} =req.body
+
+    if (!Username || !Email) {
+        throw new apiError(400,"all field are required")
+    }
+
+    const user = User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set:{
+                Username,
+                Email:Email
+            }
+        },
+        {new: true}
+    ).select("-Password")
+
+    return res
+    .status(200)
+    .json(new apiResponce(200,user,"Account Details updated successfully"))
+
+});
+
+export { registerUser, loginUser, logoutUser , refreshAccessToken , getCurenuser , changeUserPassword , updateAccountDetails };
