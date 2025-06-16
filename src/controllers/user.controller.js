@@ -4,7 +4,6 @@ import { User } from "../models/user.model.js";
 import { apiResponce } from "../utils/apiResponse.js";
 import { Level } from "../models/level.model.js";
 import jwt from "jsonwebtoken";
-import { useInsertionEffect } from "react";
 
 const generateAccessAndRefreshTokens = async (userId) => {
     try {
@@ -172,6 +171,7 @@ const refreshAccessToken = asyncHandler(async (req,res) => {
         throw new apiError(401,"invalid refresh token")
     }
 });
+
 const changeUserPassword = asyncHandler(async (req, res) => {
     const { oldPassword, newPassword } = req.body;
 
