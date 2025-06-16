@@ -128,7 +128,7 @@ const logoutUser = asyncHandler(async (req, res) => {
 });
 
 const refreshAccessToken = asyncHandler(async (req,res) => {
-    const incomingRefrashToken = req.cookie.refreshToken || req.body.refreshToken
+    const incomingRefrashToken = req.cookie?.refreshToken || req.body?.refreshToken
 
     if (!incomingRefrashToken) {
         throw new apiError(444,"unauthorized request")
@@ -142,7 +142,7 @@ const refreshAccessToken = asyncHandler(async (req,res) => {
     
         const user = await User.findById(decodedTocan?._id)
     
-        if (user) {
+        if (!user) {
             throw new apiError(444,"invalid refreshToken")
         }
     
@@ -172,28 +172,32 @@ const refreshAccessToken = asyncHandler(async (req,res) => {
         throw new apiError(401,"invalid refresh token")
     }
 });
-const changeUserPassword =asyncHandler(async (req,res) => {
-        const {oldPassword, newPassword} =req.body
-        const user = await User.findById(req.body?._id)
-        const isPasswordCorrect = User.isPasswordCorrect(oldPassword)
+const changeUserPassword = asyncHandler(async (req, res) => {
+    const { oldPassword, newPassword } = req.body;
 
-        if (!isPasswordCorrect) {
-            throw new apiError(400,"invalid old password")
-        }
+    const user = await User.findById(req.user?._id);
 
-        User.Password=newPassword
-        await User.save({validateBeforeSave: false})
+    if (!user) {
+        throw new apiError(404, "User not found");
+    }
 
-        return res
-        .status(200)
-        .json(new apiResponce(200, {}, "password changed cuccessfully"))
+    const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
 
+    if (!isPasswordCorrect) {
+        throw new apiError(400, "Invalid old password");
+    }
+
+    user.Password = newPassword;
+    await user.save({ validateBeforeSave: false });
+
+    return res.status(200).json(new apiResponce(200, {}, "Password changed successfully"));
 });
+
 
 const getCurenuser = asyncHandler(async (req,res) => {
     return res
     .status(200)
-    .json(200,req.user,"surent user fetched successfully")
+    .json(new apiResponce(200,req.user,"surent user fetched successfully"))
 });
 
 const updateAccountDetails =asyncHandler( async (req,res) => {
@@ -203,7 +207,7 @@ const updateAccountDetails =asyncHandler( async (req,res) => {
         throw new apiError(400,"all field are required")
     }
 
-    const user = User.findByIdAndUpdate(
+    const user = await User.findByIdAndUpdate(
         req.user?._id,
         {
             $set:{
