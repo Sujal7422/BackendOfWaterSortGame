@@ -36,7 +36,7 @@ const levelSchema = new Schema(
         Legendary: { type: Number, default: 0 },
         Super_level0: { type: Number, default: 0 },
         Super_level1: { type: Number, default: 0 }
-    }
+    }   
 )
 
 levelSchema.plugin(mongooseAggregatePaginate)
