@@ -1,10 +1,17 @@
-// src/controllers/auth.controller.js
+// src/controllers/user.controller.js
 import { asyncHandler } from "../utils/asynchandler.js";
 import { apiError } from "../utils/apiError.js";
 import { User } from "../models/user.model.js";
 import { apiResponse } from "../utils/apiResponse.js";
 import { Level } from "../models/level.model.js";
 import jwt from "jsonwebtoken";
+
+const cookieOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production", // only send cookies over HTTPS in production
+  sameSite: "Strict",
+  maxAge: 24 * 60 * 60 * 1000, // 1 day cookie expiry (adjust if needed)
+};
 
 const generateAccessAndRefreshTokens = async (userId) => {
   const user = await User.findById(userId);
@@ -37,11 +44,9 @@ const registerUser = asyncHandler(async (req, res) => {
   const { userAccessToken, userRefreshToken } = await generateAccessAndRefreshTokens(user._id);
   const createdUser = await User.findById(user._id).select("-Password -refreshToken");
 
-  const options = { httpOnly: true, secure: true, sameSite: "Strict" };
-
   return res.status(201)
-    .cookie("AccessToken", userAccessToken, options)
-    .cookie("RefreshToken", userRefreshToken, options)
+    .cookie("AccessToken", userAccessToken, cookieOptions)
+    .cookie("RefreshToken", userRefreshToken, cookieOptions)
     .json(new apiResponse(200, { user: createdUser, userAccessToken, userRefreshToken }, "User registered and logged in successfully"));
 });
 
@@ -61,22 +66,18 @@ const loginUser = asyncHandler(async (req, res) => {
   const { userAccessToken, userRefreshToken } = await generateAccessAndRefreshTokens(user._id);
   const loggedInUser = await User.findById(user._id).select("-Password -refreshToken");
 
-  const options = { httpOnly: true, secure: true, sameSite: "Strict" };
-
   return res.status(200)
-    .cookie("AccessToken", userAccessToken, options)
-    .cookie("RefreshToken", userRefreshToken, options)
+    .cookie("AccessToken", userAccessToken, cookieOptions)
+    .cookie("RefreshToken", userRefreshToken, cookieOptions)
     .json(new apiResponse(200, { user: loggedInUser, userAccessToken, userRefreshToken }, "User logged in successfully"));
 });
 
 const logoutUser = asyncHandler(async (req, res) => {
   await User.findByIdAndUpdate(req.user._id, { $unset: { refreshToken: 1 } }, { new: true });
 
-  const options = { httpOnly: true, secure: true, sameSite: "Strict" };
-
   return res.status(200)
-    .clearCookie("AccessToken", options)
-    .clearCookie("RefreshToken", options)
+    .clearCookie("AccessToken", cookieOptions)
+    .clearCookie("RefreshToken", cookieOptions)
     .json(new apiResponse(200, {}, "User logged out successfully"));
 });
 
@@ -95,11 +96,10 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     }
 
     const { userAccessToken, userRefreshToken } = await generateAccessAndRefreshTokens(user._id);
-    const options = { httpOnly: true, secure: true, sameSite: "Strict" };
 
     return res.status(200)
-      .cookie("AccessToken", userAccessToken, options)
-      .cookie("RefreshToken", userRefreshToken, options)
+      .cookie("AccessToken", userAccessToken, cookieOptions)
+      .cookie("RefreshToken", userRefreshToken, cookieOptions)
       .json(new apiResponse(200, { userAccessToken, userRefreshToken }, "Access token refreshed"));
   } catch (err) {
     throw new apiError(401, "Invalid refresh token");
